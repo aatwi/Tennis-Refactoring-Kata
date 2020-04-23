@@ -22,7 +22,7 @@ enum Score {
     }
 
     public static String getStringTieScoreOf(int score) {
-        if(score < 3) {
+        if (score < 3) {
             return getStringScoreOf(score) + "-All";
         }
         return "Deuce";
@@ -30,27 +30,26 @@ enum Score {
 }
 
 public class TennisGame1 implements TennisGame {
-    private int m_score1 = 0;
-    private int m_score2 = 0;
-    private String player1Name;
-    private String player2Name;
+    private final Player playerOne;
+    private final Player playerTwo;
 
     public TennisGame1(String player1Name, String player2Name) {
-        this.player1Name = player1Name;
-        this.player2Name = player2Name;
+        playerOne = new Player(player1Name);
+        playerTwo = new Player(player2Name);
     }
 
     public void wonPoint(String playerName) {
-        if (playerName.equals(player1Name))
-            m_score1 += 1;
-        else
-            m_score2 += 1;
+        if (playerName.equals(playerOne.getName())) {
+            playerOne.incrementScore();
+        } else {
+            playerTwo.incrementScore();
+        }
     }
 
     public String getScore() {
-        if (m_score1 == m_score2) {
+        if (playerOne.getScore() == playerTwo.getScore()) {
             return getScoreOnTie();
-        } else if (m_score1 >= 4 || m_score2 >= 4) {
+        } else if (playerOne.getScore() >= 4 || playerTwo.getScore() >= 4) {
             return getScoreGreaterThan4Points();
         } else {
             return getScoreLessThan4Points();
@@ -58,23 +57,45 @@ public class TennisGame1 implements TennisGame {
     }
 
     private String getScoreOnTie() {
-        return Score.getStringTieScoreOf(m_score1);
+        return Score.getStringTieScoreOf(playerOne.getScore());
     }
 
     private String getScoreGreaterThan4Points() {
-        int diffScore = m_score1 - m_score2;
-        if (diffScore == 1 || diffScore == -1) {
-            return "Advantage " + getWinner(m_score1, m_score2);
-        } else {
-            return "Win for " + getWinner(m_score1, m_score2);
-        }
+        return getStatus() + getWinner();
     }
 
-    private String getWinner(int player1Score, int player2Score) {
-        return player1Score > player2Score ? player1Name : player2Name;
+    private String getStatus() {
+        int diffScore = playerOne.getScore() - playerTwo.getScore();
+        return diffScore == 1 || diffScore == -1 ? "Advantage " : "Win for ";
+    }
+
+    private String getWinner() {
+        return playerOne.getScore() > playerTwo.getScore() ? playerOne.getName() : playerTwo.getName();
     }
 
     private String getScoreLessThan4Points() {
-        return Score.getStringScoreOf(m_score1) + "-" + Score.getStringScoreOf(m_score2);
+        return Score.getStringScoreOf(playerOne.getScore()) + "-" + Score.getStringScoreOf(playerTwo.getScore());
+    }
+
+    private static class Player {
+        private final String name;
+        private int score;
+
+        public Player(String name) {
+            this.name = name;
+            this.score = 0;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getScore() {
+            return score;
+        }
+
+        public void incrementScore() {
+            score++;
+        }
     }
 }
