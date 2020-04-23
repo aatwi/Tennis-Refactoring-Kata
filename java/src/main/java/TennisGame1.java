@@ -47,34 +47,7 @@ public class TennisGame1 implements TennisGame {
     }
 
     public String getScore() {
-        if (playerOne.getScore() == playerTwo.getScore()) {
-            return getScoreOnTie();
-        } else if (playerOne.getScore() >= 4 || playerTwo.getScore() >= 4) {
-            return getScoreGreaterThan4Points();
-        } else {
-            return getScoreLessThan4Points();
-        }
-    }
-
-    private String getScoreOnTie() {
-        return Score.getStringTieScoreOf(playerOne.getScore());
-    }
-
-    private String getScoreGreaterThan4Points() {
-        return getStatus() + getWinner();
-    }
-
-    private String getStatus() {
-        int diffScore = playerOne.getScore() - playerTwo.getScore();
-        return diffScore == 1 || diffScore == -1 ? "Advantage " : "Win for ";
-    }
-
-    private String getWinner() {
-        return playerOne.getScore() > playerTwo.getScore() ? playerOne.getName() : playerTwo.getName();
-    }
-
-    private String getScoreLessThan4Points() {
-        return Score.getStringScoreOf(playerOne.getScore()) + "-" + Score.getStringScoreOf(playerTwo.getScore());
+        return ScoreSystemFactory.getScoringSystem(playerOne, playerTwo).getScore();
     }
 
     private static class Player {
@@ -96,6 +69,76 @@ public class TennisGame1 implements TennisGame {
 
         public void incrementScore() {
             score++;
+        }
+    }
+
+    private static interface ScoreSystem {
+        String getScore();
+    }
+
+    private static class TieScoreSystem implements ScoreSystem {
+        private final Player playerOne;
+        private final Player playerTwo;
+
+        public TieScoreSystem(Player playerOne, Player playerTwo) {
+            this.playerOne = playerOne;
+            this.playerTwo = playerTwo;
+        }
+
+        @Override
+        public String getScore() {
+            return Score.getStringTieScoreOf(playerOne.getScore());
+        }
+    }
+
+    private static class GreaterThanFourPointsScoreSystem implements ScoreSystem {
+        private final Player playerOne;
+        private final Player playerTwo;
+
+        public GreaterThanFourPointsScoreSystem(Player playerOne, Player playerTwo) {
+            this.playerOne = playerOne;
+            this.playerTwo = playerTwo;
+        }
+
+        @Override
+        public String getScore() {
+            return getStatus() + getWinner();
+        }
+
+        public String getStatus() {
+            int diffScore = playerOne.getScore() - playerTwo.getScore();
+            return diffScore == 1 || diffScore == -1 ? "Advantage " : "Win for ";
+        }
+
+        public String getWinner() {
+            return playerOne.getScore() > playerTwo.getScore() ? playerOne.getName() : playerTwo.getName();
+        }
+    }
+
+    private static class LessThanFourPointsScoreSystem implements ScoreSystem {
+        private final Player playerOne;
+        private final Player playerTwo;
+
+        public LessThanFourPointsScoreSystem(Player playerOne, Player playerTwo) {
+            this.playerOne = playerOne;
+            this.playerTwo = playerTwo;
+        }
+
+        @Override
+        public String getScore() {
+            return Score.getStringScoreOf(playerOne.getScore()) + "-" + Score.getStringScoreOf(playerTwo.getScore());
+        }
+    }
+
+    private static class ScoreSystemFactory {
+        public static ScoreSystem getScoringSystem(Player playerOne, Player playerTwo) {
+            if (playerOne.getScore() == playerTwo.getScore()) {
+                return new TieScoreSystem(playerOne, playerTwo);
+            } else if (playerOne.getScore() >= 4 || playerTwo.getScore() >= 4) {
+                return new GreaterThanFourPointsScoreSystem(playerOne, playerTwo);
+            } else {
+                return new LessThanFourPointsScoreSystem(playerOne, playerTwo);
+            }
         }
     }
 }
