@@ -1,135 +1,101 @@
+import java.util.HashMap;
 
-public class TennisGame2 implements TennisGame
-{
-    public int P1point = 0;
-    public int P2point = 0;
-    
-    public String P1res = "";
-    public String P2res = "";
-    private String player1Name;
-    private String player2Name;
+public class TennisGame2 implements TennisGame {
+    private final Player playerOne;
+    private final Player playerTwo;
+
+    private final HashMap<Integer, String> SCORE_MAP = new HashMap<>();
 
     public TennisGame2(String player1Name, String player2Name) {
-        this.player1Name = player1Name;
-        this.player2Name = player2Name;
+        this.playerOne = new Player(player1Name);
+        this.playerTwo = new Player(player2Name);
+
+        initializeScoreMap();
     }
 
-    public String getScore(){
-        String score = "";
-        if (P1point == P2point && P1point < 4)
-        {
-            if (P1point==0)
-                score = "Love";
-            if (P1point==1)
-                score = "Fifteen";
-            if (P1point==2)
-                score = "Thirty";
-            score += "-All";
-        }
-        if (P1point==P2point && P1point>=3)
-            score = "Deuce";
-        
-        if (P1point > 0 && P2point==0)
-        {
-            if (P1point==1)
-                P1res = "Fifteen";
-            if (P1point==2)
-                P1res = "Thirty";
-            if (P1point==3)
-                P1res = "Forty";
-            
-            P2res = "Love";
-            score = P1res + "-" + P2res;
-        }
-        if (P2point > 0 && P1point==0)
-        {
-            if (P2point==1)
-                P2res = "Fifteen";
-            if (P2point==2)
-                P2res = "Thirty";
-            if (P2point==3)
-                P2res = "Forty";
-            
-            P1res = "Love";
-            score = P1res + "-" + P2res;
-        }
-        
-        if (P1point>P2point && P1point < 4)
-        {
-            if (P1point==2)
-                P1res="Thirty";
-            if (P1point==3)
-                P1res="Forty";
-            if (P2point==1)
-                P2res="Fifteen";
-            if (P2point==2)
-                P2res="Thirty";
-            score = P1res + "-" + P2res;
-        }
-        if (P2point>P1point && P2point < 4)
-        {
-            if (P2point==2)
-                P2res="Thirty";
-            if (P2point==3)
-                P2res="Forty";
-            if (P1point==1)
-                P1res="Fifteen";
-            if (P1point==2)
-                P1res="Thirty";
-            score = P1res + "-" + P2res;
-        }
-        
-        if (P1point > P2point && P2point >= 3)
-        {
-            score = "Advantage player1";
-        }
-        
-        if (P2point > P1point && P1point >= 3)
-        {
-            score = "Advantage player2";
-        }
-        
-        if (P1point>=4 && P2point>=0 && (P1point-P2point)>=2)
-        {
-            score = "Win for player1";
-        }
-        if (P2point>=4 && P1point>=0 && (P2point-P1point)>=2)
-        {
-            score = "Win for player2";
-        }
-        return score;
+    private void initializeScoreMap() {
+        SCORE_MAP.put(0, "Love");
+        SCORE_MAP.put(1, "Fifteen");
+        SCORE_MAP.put(2, "Thirty");
+        SCORE_MAP.put(3, "Forty");
     }
-    
-    public void SetP1Score(int number){
-        
-        for (int i = 0; i < number; i++)
-        {
-            P1Score();
+
+    public String getScore() {
+        int scoreDiff = Math.abs(playerOne.getScorePoints() - playerTwo.getScorePoints());
+        if (bothPlayersHaveScoreLessThanThree()) {
+            setTextScoreForPlayers();
+
+            if (playersHaveTieScore()) {
+                return playerOne.getScorePoints() == 3 ? "Deuce" : playerOne.getScoreText() + "-All";
+            }
+            return this.playerOne.getScoreText() + "-" + this.playerTwo.getScoreText();
+        } else if (scoreDiff > 0) {
+            return getLeaderText(scoreDiff);
+        } else {
+            return "Deuce";
         }
-            
     }
-    
-    public void SetP2Score(int number){
-        
-        for (int i = 0; i < number; i++)
-        {
-            P2Score();
+
+    private void setTextScoreForPlayers() {
+        playerOne.setScoreText(SCORE_MAP.get(playerOne.getScorePoints()));
+        playerTwo.setScoreText(SCORE_MAP.get(playerTwo.getScorePoints()));
+    }
+
+    private String getLeaderText(int scoreDiff) {
+        if (scoreDiff == 1) {
+            return "Advantage " + getLeader().getName();
         }
-            
+        return "Win for " + getLeader().getName();
     }
-    
-    public void P1Score(){
-        P1point++;
+
+    private Player getLeader() {
+        return playerOne.getScorePoints() > playerTwo.getScorePoints() ? playerOne : playerTwo;
     }
-    
-    public void P2Score(){
-        P2point++;
+
+    private boolean bothPlayersHaveScoreLessThanThree() {
+        return playerOne.getScorePoints() <= 3 && playerTwo.getScorePoints() <= 3;
+    }
+
+    private boolean playersHaveTieScore() {
+        return this.playerOne.getScorePoints() == this.playerTwo.getScorePoints();
     }
 
     public void wonPoint(String player) {
-        if (player == "player1")
-            P1Score();
+        if (player.equals(playerOne.getName()))
+            playerOne.score();
         else
-            P2Score();
+            playerTwo.score();
+    }
+
+    private static class Player {
+        private final String name;
+        private int scorePoints;
+        private String scoreText;
+
+        public Player(String name) {
+            this.name = name;
+            this.scorePoints = 0;
+            this.scoreText = "";
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getScorePoints() {
+            return scorePoints;
+        }
+
+        public void score() {
+            this.scorePoints++;
+        }
+
+        public String getScoreText() {
+            return scoreText;
+        }
+
+        public void setScoreText(String scoreText) {
+            this.scoreText = scoreText;
+        }
     }
 }
